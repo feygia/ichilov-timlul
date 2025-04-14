@@ -38,6 +38,7 @@ export const useApp = () => {
     const gainNodeRef = useRef(null);
     const analyserRef = useRef(null);
     const animationFrameRef = useRef(null);
+    const debounceCleanRef = useRef(null);
 
     const [isProcessingAI, setIsProcessingAI] = useState(false);
 
@@ -455,9 +456,17 @@ export const useApp = () => {
                                 ].filter(Boolean).join('\n');
                                 
                                 // Clean the transcription text
-                                const cleanText = await aiAgentClean(displayText);
-                                console.log('clean transcription:', cleanText);
-                                setTranscription(cleanText);
+                                if (debounceCleanRef.current) {
+                                    clearTimeout(debounceCleanRef.current);
+                                  }
+                              
+                                  debounceCleanRef.current = setTimeout(async () => {
+                                    const cleanText = await aiAgentClean(displayText);
+                                    console.log('clean transcription (debounced):', cleanText);
+                                    setTranscription(cleanText);
+                                  }, 800); // only clean after 800ms of silence
+                                
+                                setTranscription(displayText);
                             }
                         } else {
                             // For final results
