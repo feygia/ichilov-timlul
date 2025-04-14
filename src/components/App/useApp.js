@@ -339,7 +339,7 @@ export const useApp = () => {
         const audioQueue = [];
         let accumulatedBytes = 0;
         let queueInterval;
-
+        
         try {
             const source = audioContextRef.current.createMediaStreamSource(stream);
             workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'audio-processor');
@@ -425,7 +425,7 @@ export const useApp = () => {
                     if (result.Alternatives?.[0]) {
                         const alternative = result.Alternatives[0];
                         const newText = alternative.Transcript || '';
-
+                        
                         // Handle speaker labels
                         let speakerLabel = '';
                         if (numSpeakers > 1) {
@@ -453,8 +453,11 @@ export const useApp = () => {
                                     ...completeTranscriptsRef.current,
                                     speakerLabel + currentTranscript
                                 ].filter(Boolean).join('\n');
-
-                                setTranscription(displayText);
+                                
+                                // Clean the transcription text
+                                const cleanText = await aiAgentClean(displayText);
+                                console.log('clean transcription:', cleanText);
+                                setTranscription(cleanText);
                             }
                         } else {
                             // For final results

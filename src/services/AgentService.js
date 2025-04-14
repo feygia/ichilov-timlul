@@ -287,24 +287,10 @@ async function getTranscriptionContent(sessionId) {
 }
 
 // Update the aiAgentClean function to properly handle the content
-export const aiAgentClean = async (sessionId, onProgress) => {
-  if (!sessionId) {
-    throw new Error('No session ID provided');
-  }
-
+export const aiAgentClean = async (text, onProgress) => {
   try {
-    // Get both AI instructions and transcription content
-    const [systemPrompt, transcriptionContent] = await Promise.all([
-      getAiInstructions(),
-      getTranscriptionContent(sessionId)
-    ]);
-    
-    if (!transcriptionContent) {
-      throw new Error('No transcription content found');
-    }
-
+    console.log('Text to clean:', text);
     console.log('Initializing Bedrock client...');
-    
     const bedrockClient = new BedrockRuntimeClient({
       region: process.env.REACT_APP_AWS_REGION || 'us-east-1',
       credentials: {
@@ -317,17 +303,28 @@ export const aiAgentClean = async (sessionId, onProgress) => {
       anthropic_version: "bedrock-2023-05-31",
       max_tokens: 3000,
       temperature: 0,
-      system: ".התפקיד שלך לנקות את הטקסט ולשמור עליו כמו שהוא בצורה הגולמית שלו, אל תוסיף הקדמה בהתחה וסיכום סוף. הדבר שצרי לשנות:1. סימני פיסוק לדוגמא נקודותיים יוחלף ל :. 2.מספרים נומרים כשאפשר לדוגמא: חמישים יוחלף ל50",
+      system:`
+        אתה מעבד תמלול בעברית שעשוי להכיל שגיאות דקדוק, משפטים לא שלמים ושפה שאינה עקבית.
+שפר את הטקסט על ידי תיקון הדקדוק והשטף כך שיישמע טבעי ומקצועי.
+אתה עובד בסטרימינג, כך שזה בסדר שתקבל חלקי משפטים.
+וודא שהפיסוק והעיצוב תקינים, ותקן אי דיוקים בתמלול, כגון מילים שאינן מתאימות להקשר.
+שמור על המבנה המקורי של הטקסט, למשל, אם מדובר בשיחה – השאר אותה במתכונתה.
+אם מדובר בשיחה בין דוברים, השאר את המלל שמציין את הדוברים, כמו "דובר 1" או "דובר 2".
+המטרה היא לנסח מחדש את הטקסט, והתשובה צריכה לכלול אך ורק את הגרסה המתוקנת, ללא תוספות.
+תשים לב במיוחד לפקודות כגון רד שורה וכו, ותתרגם אותן לתווים מתאימים.
+החזר מספרים, כמויות וכו בתור מספר ולא מילים.
+
+      ` ,
       messages: [
         {
           role: "user",
-          content: [{ type: "text", text: transcriptionContent }]
+          content: [{ type: "text", text: text }]
         }
       ]
     };
 
     const command = new InvokeModelWithResponseStreamCommand({
-      modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
+      modelId: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
       body: JSON.stringify(requestBody),
       contentType: "application/json",
       accept: "application/json",
@@ -359,7 +356,7 @@ export const aiAgentClean = async (sessionId, onProgress) => {
       const processedResult = await applyMedicalReplacements(fullResponse);
 
       // Save the processed text to S3
-      await saveCleanedText(sessionId, fullResponse);
+      // await saveCleanedText(sessionId, fullResponse);
 
       // Update the progress with the final processed HTML
       if (onProgress) {
