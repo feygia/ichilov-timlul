@@ -313,7 +313,6 @@ export const aiAgentClean = async (text, onProgress) => {
 המטרה היא לנסח מחדש את הטקסט, והתשובה צריכה לכלול אך ורק את הגרסה המתוקנת, ללא תוספות.
 תשים לב במיוחד לפקודות כגון רד שורה וכו, ותתרגם אותן לתווים מתאימים.
 החזר מספרים, כמויות וכו בתור מספר ולא מילים.
-
       ` ,
       messages: [
         {
@@ -324,7 +323,7 @@ export const aiAgentClean = async (text, onProgress) => {
     };
 
     const command = new InvokeModelWithResponseStreamCommand({
-      modelId: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      modelId: "anthropic.claude-3-haiku-20240307",
       body: JSON.stringify(requestBody),
       contentType: "application/json",
       accept: "application/json",
