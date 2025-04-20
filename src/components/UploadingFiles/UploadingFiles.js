@@ -14,5 +14,4 @@ const UploadingFiles = ({uploadingFile, selectedFileName}) => {
     )
 }
 
-
 export default UploadingFiles;

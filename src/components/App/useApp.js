@@ -38,6 +38,7 @@ export const useApp = () => {
     const gainNodeRef = useRef(null);
     const analyserRef = useRef(null);
     const animationFrameRef = useRef(null);
+    const debounceCleanRef = useRef(null);
 
     const [isProcessingAI, setIsProcessingAI] = useState(false);
 
@@ -346,7 +347,6 @@ export const useApp = () => {
         const audioQueue = [];
         let accumulatedBytes = 0;
         let queueInterval;
-
         try {
             const source = audioContextRef.current.createMediaStreamSource(stream);
             workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'audio-processor');
@@ -432,7 +432,6 @@ export const useApp = () => {
                     if (result.Alternatives?.[0]) {
                         const alternative = result.Alternatives[0];
                         const newText = alternative.Transcript || '';
-
                         // Handle speaker labels
                         let speakerLabel = '';
                         if (numSpeakers > 1) {
@@ -460,6 +459,18 @@ export const useApp = () => {
                                     ...completeTranscriptsRef.current,
                                     speakerLabel + currentTranscript
                                 ].filter(Boolean).join('\n');
+                                
+                                // Clean the transcription text
+                                if (debounceCleanRef.current) {
+                                    clearTimeout(debounceCleanRef.current);
+                                  }
+                              
+                                  debounceCleanRef.current = setTimeout(async () => {
+                                    const cleanText = await aiAgentClean(displayText);
+                                    console.log('clean transcription (debounced):', cleanText);
+                                    setTranscription(cleanText);
+                                  }, 800); // only clean after 800ms of silence
+                                
                                 setTranscription(displayText);
                             }
                         } else {
